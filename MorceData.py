@@ -7,7 +7,8 @@ import unicodedata
 
 import FileConvert
 import ReedSolomon
-from MyHamming import MyHamming
+import MyHamming
+import Masque
 
 morse_dict = {
                 'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
@@ -29,7 +30,9 @@ class DataMorseEncoder:
         self.RS = ReedSolomon.ReedSolomon(self.text_to_morse(self.remplacer_accents(text)))
         encoded_message, enc_params = self.RS.encode()
         binary_data = self.morse_to_matrix(encoded_message)
-        enc_params['masque'] = 3
+        me = Masque.Masque(binary_data)
+        binary_data, masque = me.add_mask()
+        enc_params['masque'] = masque
         donnee = self.entete(enc_params, min(len(binary_data[0])-2, 10))
         datamorseencoder = self.ajouter_lignes_et_colonnes(binary_data, donnee)
         print("\033[36mMessage encrypter !\033[0m")
@@ -43,7 +46,8 @@ class DataMorseEncoder:
         print(enc_params)
 
 
-    def remplacer_accents(self, texte):
+    @staticmethod
+    def remplacer_accents(texte):
         # Supprimer les accents
         texte_sans_accents = unicodedata.normalize('NFD', texte)
         texte_sans_accents = ''.join(
@@ -61,7 +65,8 @@ class DataMorseEncoder:
         return morse
 
 
-    def word_to_morse(self, text):
+    @staticmethod
+    def word_to_morse(text):
         morse_text = [morse_dict[i] for i in text]
         morse_deux = [[[1, 0] if carac == '.' else [1, 1, 1, 0] for carac in elem] for elem in morse_text]
         morse_trois = []
@@ -71,7 +76,8 @@ class DataMorseEncoder:
             morse_trois.extend([0, 0, 0])
         return morse_trois
 
-    def subdiviser_list(self, list, size_list):
+    @staticmethod
+    def subdiviser_list(list, size_list):
         # Créer les sous-listes avec des tranches
         sublists = [list[i:i + size_list] for i in range(0, len(list), size_list)]
 
@@ -87,7 +93,8 @@ class DataMorseEncoder:
         return self.subdiviser_list(morse, size)
 
 
-    def entier_vers_bits(self, n, taille=10):
+    @staticmethod
+    def entier_vers_bits(n, taille=10):
         bits_str = format(n, '0'+str(taille)+'b')
         bits = [int(b) for b in bits_str]
         return bits
@@ -110,12 +117,13 @@ class DataMorseEncoder:
         lignes_sup.append(pad_bits_morse)
         lignes_sup.append(message_len_bytes_morse)
 
-        hm1 = MyHamming(lignes_sup)
+        hm1 = MyHamming.MyHamming(lignes_sup)
         lignes_sup = hm1.encode()
 
         return lignes_sup
 
-    def ajouter_lignes_et_colonnes(self, matrice, ajout_lignes):
+    @staticmethod
+    def ajouter_lignes_et_colonnes(matrice, ajout_lignes):
         x = len(matrice[0])
         y = len(matrice)
 
@@ -171,7 +179,8 @@ class DataMorseEncoder:
 
         return new_matrice
 
-    def draw_triangles(self, x, y, image, width, height):
+    @staticmethod
+    def draw_triangles(x, y, image, width, height):
         vertices = np.array([[x + width/2, y], [x + width, y + height], [x, y + height]], np.int32)
         pts = vertices.reshape((-1, 1, 2))
         cv2.polylines(image, [pts], isClosed=True, color=(0, 0, 255), thickness=1)
@@ -230,7 +239,6 @@ class DataMorseDecoder:
 
             if not self.cap.isOpened():
                 raise SystemError("Erreur : Impossible d'ouvrir la caméra")
-                return
 
         def decoder(self):
             print("\033[36mDecodage de l'image\033[0m")
@@ -245,7 +253,8 @@ class DataMorseDecoder:
             self.path = path
 
 
-        def calculate_average_distance(self, points):
+        @staticmethod
+        def calculate_average_distance(points):
             """Calcule la distance moyenne entre tous les points."""
             distances = []
             for i in range(len(points)):
@@ -254,7 +263,8 @@ class DataMorseDecoder:
                     distances.append(distance)
             return np.mean(distances) if distances else 0
 
-        def is_point_isolated(self, point, points, average_distance, percentage):
+        @staticmethod
+        def is_point_isolated(point, points, average_distance, percentage):
             """Vérifie si un point est isolé par rapport à une liste de points."""
             distances = [np.linalg.norm(np.array(point) - np.array(other_point)) for other_point in points if
                          other_point != point]
@@ -278,12 +288,12 @@ class DataMorseDecoder:
 
             return filtered_points
 
-        def draw_matrix_with_points(self, points):
+        @staticmethod
+        def draw_matrix_with_points(points):
             """Dessine une grille sur l'image et place les points dans les cases."""
             # Calculer l'espacement entre les points
             if len(points) < 2:
                 raise ValueError("Pas assez de points pour déterminer l'espacement.")
-                return False
 
             # Calculer les distances entre les points pour déterminer l'espacement
             distances = []
@@ -332,7 +342,8 @@ class DataMorseDecoder:
             return np.array(matrix)
 
 
-        def recup_triangle(self, contours):
+        @staticmethod
+        def recup_triangle(contours):
             triangles = []
             areas = []
 
@@ -351,7 +362,8 @@ class DataMorseDecoder:
                     triangles.append(approx)
             return triangles, areas
 
-        def position(self, triangles, areas, average_area):
+        @staticmethod
+        def position(triangles, areas, average_area):
             position = []
             for i, triangle in enumerate(triangles):
                 if areas[i] > average_area - 2 / 100 * average_area:
@@ -404,14 +416,16 @@ class DataMorseDecoder:
             self.matrix = matrix
 
 
-        def create_chaine(self, matrix):
+        @staticmethod
+        def create_chaine(matrix):
             chaine = []
             for ligne in matrix:
                 chaine.extend(ligne)
             return chaine
 
 
-        def split(self, lst, sep):
+        @staticmethod
+        def split(lst, sep):
             result = []
             i = 0
             buffer = []
@@ -449,7 +463,8 @@ class DataMorseDecoder:
             return symbol
 
 
-        def get_key_from_value(self, value):
+        @staticmethod
+        def get_key_from_value(value):
             for key, val in morse_dict.items():
                 if val == value:
                     return key
@@ -462,11 +477,11 @@ class DataMorseDecoder:
             if 5 in symbolText:
                 raise Exception('Erreur de lecture du Code DataMorse! Essayer avec une image plus nettes ou avec un DataMorse plus zoomer !')
             text = ''.join(symbolText)
-            if symbolText == []:
+            if not symbolText:
                 Text = ""
             else:
                 Text = self.get_key_from_value(text)
-                if (Text is None):
+                if Text is None:
                     raise Exception(
                         'Erreur de lecture du Code DataMorse! Essayer avec une image plus nettes ou avec un DataMorse plus zoomer !')
             return Text
@@ -487,12 +502,14 @@ class DataMorseDecoder:
                 text = text + " " + self.morse_to_word(mot)
             return text
 
-        def rotate_matrix_anticlockwise(self, matrix):
+        @staticmethod
+        def rotate_matrix_anticlockwise(matrix):
             transposed = [[matrix[j][i] for j in range(len(matrix))] for i in range(len(matrix[0]))]
             rotated = [row[::-1] for row in transposed]
             return rotated
 
-        def bits_vers_entier(self, bits):
+        @staticmethod
+        def bits_vers_entier(bits):
             """
             Convertit une liste de bits (par exemple 10 bits) en entier décimal.
 
@@ -516,7 +533,7 @@ class DataMorseDecoder:
             entete2 = [row[len(self.matrix)-5:] for row in self.matrix[5:min(16, len(self.matrix))]]
             entete2 = self.rotate_matrix_anticlockwise(entete2)
 
-            entete = MyHamming(entete1, entete2).decode()
+            entete = MyHamming.MyHamming(entete1, entete2).decode()
 
             print("\033[36mPreparation des donnees ...\033[0m")
 
@@ -531,11 +548,14 @@ class DataMorseDecoder:
             for i in range(5, len(matrice)):
                 self.matrix.append(matrice[i][:len(matrice[i]) - 5])
 
+            me = Masque.Masque(self.matrix)
+            self.matrix = me.remove_mask(masque)[0]
+
             chaine = self.create_chaine(self.matrix)
 
             print("\033[36mCorrection des erreurs dans les donnees ...\033[0m")
-            self.RS = ReedSolomon.ReedSolomon(chaine)
-            encoded_bits = self.RS.decode(dict_Solomon)
+            RS = ReedSolomon.ReedSolomon(chaine)
+            encoded_bits = RS.decode(dict_Solomon)
 
             print("\033[36mConversion en hexadecimal des donnees ...\033[0m")
             texte = self.morse_to_text(encoded_bits)
