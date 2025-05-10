@@ -131,35 +131,35 @@ class DataMorseEncoder:
 
         line1 = []
         line1.extend(ajout_lignes[0])
-        line1.extend([0 for _ in range(len(ajout_lignes[0]), x)])
+        line1.extend([0 if i % 2 == 0 else 1  for i in range(len(ajout_lignes[0]), x)])
         bisline1 = list(line1)
         bisline1.extend([1, 1, 1, 1, 1])
         new_matrice.append(bisline1)
 
         line2 = []
         line2.extend(ajout_lignes[1])
-        line2.extend([0 for _ in range(len(ajout_lignes[1]), x)])
+        line2.extend([1 if i % 2 == 0 else 0  for i in range(len(ajout_lignes[1]), x)])
         bisline2 = list(line2)
         bisline2.extend([1, 0, 1, 0, 1])
         new_matrice.append(bisline2)
 
         line3 = []
         line3.extend(ajout_lignes[2])
-        line3.extend([0 for _ in range(len(ajout_lignes[2]), x)])
+        line3.extend([0 if i % 2 == 0 else 1 for i in range(len(ajout_lignes[2]), x)])
         bisline3 = list(line3)
         bisline3.extend([1, 1, 1, 1, 1])
         new_matrice.append(bisline3)
 
         line4 = []
         line4.extend(ajout_lignes[3])
-        line4.extend([0 for _ in range(len(ajout_lignes[3]), x)])
+        line4.extend([1 if i % 2 == 0 else 0 for i in range(len(ajout_lignes[3]), x)])
         bisline4 = list(line4)
         bisline4.extend([1, 0, 1, 0, 1])
         new_matrice.append(bisline4)
 
         line5 = []
         line5.extend(ajout_lignes[4])
-        line5.extend([0 for _ in range(len(ajout_lignes[4]), x)])
+        line5.extend([0 if i % 2 == 0 else 1 for i in range(len(ajout_lignes[4]), x)])
         bisline5 = list(line5)
         bisline5.extend([1, 1, 1, 1, 1])
         new_matrice.append(bisline5)
