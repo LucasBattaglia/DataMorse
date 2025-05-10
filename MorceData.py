@@ -1,9 +1,13 @@
+import copy
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import unicodedata
 
 import FileConvert
 import ReedSolomon
+from MyHamming import MyHamming
 
 morse_dict = {
                 'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
@@ -17,23 +21,37 @@ morse_dict = {
               }
 
 
-class MorseDataEncoder:
+class DataMorseEncoder:
     def __init__(self):
-        text = "HELLO COMMENT CA VA? Je M'appelle lucas!"
-        #text = input()
-        self.RS = ReedSolomon.ReedSolomon(self.text_to_morse(text))
-        encoded_bits, enc_params = self.RS.encode()
-        binary_data = self.morse_to_matrix(encoded_bits)
-        #liste = []
-        #for ele in binary_data:
-        #    liste.extend(ele)
-        #print(binary_data)
-        img = self.generate_image(binary_data)
+        print("Votre message : ", end="")
+        text = input()
+        print("\033[36mEncryptage de votre message en DataMorse en cours ... \033[0m")
+        self.RS = ReedSolomon.ReedSolomon(self.text_to_morse(self.remplacer_accents(text)))
+        encoded_message, enc_params = self.RS.encode()
+        binary_data = self.morse_to_matrix(encoded_message)
+        enc_params['masque'] = 3
+        donnee = self.entete(enc_params, min(len(binary_data[0])-2, 10))
+        datamorseencoder = self.ajouter_lignes_et_colonnes(binary_data, donnee)
+        print("\033[36mMessage encrypter !\033[0m")
+        print("\033[36mGeneration de l'image ...\033[0m")
+        img = self.generate_image(datamorseencoder)
         plt.imshow(img, cmap='gray')
         plt.axis('off')
-        plt.show()
+        cv2.imwrite('./img/message.png', img)
+        print("Image du message : img/message.png")
+        print("Vos paramettres de decodage : ", end="")
         print(enc_params)
 
+
+    def remplacer_accents(self, texte):
+        # Supprimer les accents
+        texte_sans_accents = unicodedata.normalize('NFD', texte)
+        texte_sans_accents = ''.join(
+            c for c in texte_sans_accents
+            if unicodedata.category(c) != 'Mn'
+        )
+        # Convertir en majuscules
+        return texte_sans_accents
 
     def text_to_morse(self, text):
         morse = []
@@ -64,10 +82,94 @@ class MorseDataEncoder:
         return sublists
 
 
-    def morse_to_matrix(self, morce):
-        size = int(np.ceil(np.sqrt(len(morce))))
-        return self.subdiviser_list(morce, size)
+    def morse_to_matrix(self, morse):
+        size = int(np.ceil(np.sqrt(len(morse))))
+        return self.subdiviser_list(morse, size)
 
+
+    def entier_vers_bits(self, n, taille=10):
+        bits_str = format(n, '0'+str(taille)+'b')
+        bits = [int(b) for b in bits_str]
+        return bits
+
+
+    def entete(self, valeur, taille=10):
+        masque = valeur['masque']
+        n_parity = valeur['n_parity']
+        pad_bits = valeur['pad_bits']
+        message_len_bytes = valeur['message_len_bytes']
+
+        masque_morse = self.entier_vers_bits(masque, taille)
+        n_parity_morse = self.entier_vers_bits(n_parity, taille)
+        pad_bits_morse = self.entier_vers_bits(pad_bits, taille)
+        message_len_bytes_morse = self.entier_vers_bits(message_len_bytes, taille)
+
+        lignes_sup = []
+        lignes_sup.append(masque_morse)
+        lignes_sup.append(n_parity_morse)
+        lignes_sup.append(pad_bits_morse)
+        lignes_sup.append(message_len_bytes_morse)
+
+        hm1 = MyHamming(lignes_sup)
+        lignes_sup = hm1.encode()
+
+        return lignes_sup
+
+    def ajouter_lignes_et_colonnes(self, matrice, ajout_lignes):
+        x = len(matrice[0])
+        y = len(matrice)
+
+        new_matrice = []
+
+        line1 = []
+        line1.extend(ajout_lignes[0])
+        line1.extend([0 for _ in range(len(ajout_lignes[0]), x)])
+        bisline1 = list(line1)
+        bisline1.extend([1, 1, 1, 1, 1])
+        new_matrice.append(bisline1)
+
+        line2 = []
+        line2.extend(ajout_lignes[1])
+        line2.extend([0 for _ in range(len(ajout_lignes[1]), x)])
+        bisline2 = list(line2)
+        bisline2.extend([1, 0, 1, 0, 1])
+        new_matrice.append(bisline2)
+
+        line3 = []
+        line3.extend(ajout_lignes[2])
+        line3.extend([0 for _ in range(len(ajout_lignes[2]), x)])
+        bisline3 = list(line3)
+        bisline3.extend([1, 1, 1, 1, 1])
+        new_matrice.append(bisline3)
+
+        line4 = []
+        line4.extend(ajout_lignes[3])
+        line4.extend([0 for _ in range(len(ajout_lignes[3]), x)])
+        bisline4 = list(line4)
+        bisline4.extend([1, 0, 1, 0, 1])
+        new_matrice.append(bisline4)
+
+        line5 = []
+        line5.extend(ajout_lignes[4])
+        line5.extend([0 for _ in range(len(ajout_lignes[4]), x)])
+        bisline5 = list(line5)
+        bisline5.extend([1, 1, 1, 1, 1])
+        new_matrice.append(bisline5)
+
+
+        for i in range(y):
+            new_line = matrice[i]
+            if i < len(line1):
+                new_line.append(line5[i])
+                new_line.append(line4[i])
+                new_line.append(line3[i])
+                new_line.append(line2[i])
+                new_line.append(line1[i])
+            else:
+                new_line.extend([0, 0, 0, 0, 0])
+            new_matrice.append(new_line)
+
+        return new_matrice
 
     def draw_triangles(self, x, y, image, width, height):
         vertices = np.array([[x + width/2, y], [x + width, y + height], [x, y + height]], np.int32)
@@ -77,7 +179,7 @@ class MorseDataEncoder:
 
 
     def generate_image(self, matrix):
-        size = len(matrix)
+        size = max(len(matrix), len(matrix[0]))
         width = 20
         height = 20
         image = np.ones(((size+10) * (width+5), (size+10) * (height+5)), dtype=np.uint8) * 255
@@ -88,52 +190,54 @@ class MorseDataEncoder:
         #self.draw_triangles(x, y, image, 50, 50)
 
         # Donnee
-        for i in range(size):
-            for j in range(size):
+        for i in range(len(matrix[0])):
+            for j in range(len(matrix)):
                 x, y = i * (width + 4) + 20, (j+3) * (height + 4) + 20
                 if matrix[j][i] == 1:
                     self.draw_triangles(x, y, image, width, height)
         return image
 
-class MorseDataDecoder:
+class DataMorseDecoder:
     ###### Attribut  ########
     decodeur = None
 
     ###### Methode  ########
     def __init__(self, data=None):
+        print("\033[36mInitialisation du decodeur ...\033[0m")
         if type(data) is None:
-            self.decodeur = self.MorseDataDecoderCamera()
+            self.decodeur = self.DataMorseDecoderCamera()
         elif type(data) is str:
-            self.decodeur = self.MorseDataDecoderImage(data)
+            self.decodeur = self.DataMorseDecoderImage(data)
         elif type(data) is list:
-            self.decodeur = self.MorseDataDecoderMatrix(data)
+            self.decodeur = self.DataMorseDecoderMatrix(data)
         elif type(data) is np.ndarray:
-            self.decodeur = self.MorseDataDecoderMatrix(data)
+            self.decodeur = self.DataMorseDecoderMatrix(data)
         else:
             raise TypeError("Le type du parametre entrer n'est pas correct: Soit rien (camera), soit un str (path de l'image), soit une liste (matrice de bit)")
+        print("\033[36mDecodeur Initialiser\033[0m")
 
 
     def run_decodeur(self):
         if self.decodeur is None:
-            raise ValueError("Votre decoder n'a pas étais initialisé avant d'être utilisé. Faite MorseDataDecoder(data=None)")
+            raise ValueError("Votre decoder n'a pas étais initialisé avant d'être utilisé. Faite DataMorseDecoder(data=None)")
         self.decodeur.decoder()
 
 
     ###### Sous Classe  ########
-    class MorseDataDecoderCamera:
+    class DataMorseDecoderCamera:
         def __init__(self):
             self.cap = cv2.VideoCapture(0)  # Ouvre la caméra
 
             if not self.cap.isOpened():
-                print("Erreur : Impossible d'ouvrir la caméra")
+                raise SystemError("Erreur : Impossible d'ouvrir la caméra")
                 return
 
         def decoder(self):
-            print("decodage de l'image")
-            raise NotImplementedError("La fonction decoder de la classe MorseDataDecoderCamera n'a pas encore été implémentée.")
+            print("\033[36mDecodage de l'image\033[0m")
+            raise NotImplementedError("La fonction decoder de la classe DataMorseDecoderCamera n'a pas encore été implémentée.")
 
 
-    class MorseDataDecoderImage:
+    class DataMorseDecoderImage:
         def __init__(self, path):
             if path.lower().endswith(('.jpg', '.jpeg')):
                 convert = FileConvert.FileConvert(path)
@@ -178,7 +282,7 @@ class MorseDataDecoder:
             """Dessine une grille sur l'image et place les points dans les cases."""
             # Calculer l'espacement entre les points
             if len(points) < 2:
-                print("Pas assez de points pour déterminer l'espacement.")
+                raise ValueError("Pas assez de points pour déterminer l'espacement.")
                 return False
 
             # Calculer les distances entre les points pour déterminer l'espacement
@@ -261,6 +365,8 @@ class MorseDataDecoder:
         def decoder(self):
             img = cv2.imread(self.path)
 
+            print("\033[36mLecture de l'image en cours ...\033[0m")
+
             scale_percent = 2000  # Ajuste si besoin
             width = int(img.shape[1] * scale_percent / 100)
             height = int(img.shape[0] * scale_percent / 100)
@@ -288,12 +394,12 @@ class MorseDataDecoder:
             matrix = self.draw_matrix_with_points(filtered_points)
 
             # On recreer une instance de notre decodeur pour decoder la matrice
-            mere = MorseDataDecoder(matrix)
+            mere = DataMorseDecoder(matrix)
             mere.run_decodeur()
 
 
 
-    class MorseDataDecoderMatrix:
+    class DataMorseDecoderMatrix:
         def __init__(self, matrix):
             self.matrix = matrix
 
@@ -354,7 +460,7 @@ class MorseDataDecoder:
             symbolMorse = self.splitSymbol(morse)
             symbolText = ['.' if x == [1] else '-' if x == [1, 1, 1] else 5 for x in symbolMorse]
             if 5 in symbolText:
-                raise Exception('Erreur de lecture du Code MorseData! Essayer avec une image plus nettes ou avec un MorseData plus zoomer !')
+                raise Exception('Erreur de lecture du Code DataMorse! Essayer avec une image plus nettes ou avec un DataMorse plus zoomer !')
             text = ''.join(symbolText)
             if symbolText == []:
                 Text = ""
@@ -362,7 +468,7 @@ class MorseDataDecoder:
                 Text = self.get_key_from_value(text)
                 if (Text is None):
                     raise Exception(
-                        'Erreur de lecture du Code MorseData! Essayer avec une image plus nettes ou avec un MorseData plus zoomer !')
+                        'Erreur de lecture du Code DataMorse! Essayer avec une image plus nettes ou avec un DataMorse plus zoomer !')
             return Text
 
 
@@ -381,118 +487,68 @@ class MorseDataDecoder:
                 text = text + " " + self.morse_to_word(mot)
             return text
 
+        def rotate_matrix_anticlockwise(self, matrix):
+            transposed = [[matrix[j][i] for j in range(len(matrix))] for i in range(len(matrix[0]))]
+            rotated = [row[::-1] for row in transposed]
+            return rotated
+
+        def bits_vers_entier(self, bits):
+            """
+            Convertit une liste de bits (par exemple 10 bits) en entier décimal.
+
+            Args:
+                bits (list of int): Liste contenant des 0 ou 1, de longueur 10.
+
+            Returns:
+                int: La valeur décimale correspondante.
+            """
+            # Convertir la liste de bits en chaîne puis en entier
+            bits_str = ''.join(str(b) for b in bits)
+            decimal_value = int(bits_str, 2)
+            return decimal_value
+
 
         def decoder(self):
-            """self.cache1 = self.matrix[0][:len(self.matrix[0]) - 6]
-            self.reedSolomon1 = [self.matrix[1][len(self.matrix[0]) - 6], self.matrix[2][len(self.matrix[0]) - 6]]
-            self.other1 = self.matrix[3][:len(self.matrix[0]) - 6]
-            self.format1 = self.matrix[4][:len(self.matrix[0]) - 6]
-            self.cache2 = [self.matrix[i][len(self.matrix[i]) - 1] for i in range(4, len(self.matrix)-1)]
-            self.reedSolomon2 = [[self.matrix[i][len(self.matrix[i]) - 2] for i in range(4, len(self.matrix) - 1)],
-                                 [self.matrix[i][len(self.matrix[i]) - 3] for i in range(4, len(self.matrix) - 1)]]
-            self.other2 = [self.matrix[i][len(self.matrix[i]) - 4] for i in range(4, len(self.matrix) - 1)]
-            self.format2 = [self.matrix[i][len(self.matrix[i]) - 5] for i in range(4, len(self.matrix) - 1)]
-            print(self.cache1, self.cache1 == self.cache2)
-            print(self.reedSolomon1, self.reedSolomon1 == self.reedSolomon2)
-            print(self.other1, self.other1 == self.other2)
-            print(self.format1, self.format1 == self.format2)
-            self.matrix = self.matrix[4:]"""
-            print(self.matrix.tolist())
+            print("\033[36mDecodage en cours ...\033[0m")
+            print("\033[36mExtraction de l'entete ...\033[0m")
+
+            entete1 = [row[:min(11, len(self.matrix[0])-6)] for row in self.matrix[:5]]
+            entete2 = [row[len(self.matrix)-5:] for row in self.matrix[5:min(16, len(self.matrix))]]
+            entete2 = self.rotate_matrix_anticlockwise(entete2)
+
+            entete = MyHamming(entete1, entete2).decode()
+
+            print("\033[36mPreparation des donnees ...\033[0m")
+
+            masque = self.bits_vers_entier(entete[0])
+            n_parity = self.bits_vers_entier(entete[1])
+            pad_bits = self.bits_vers_entier(entete[2])
+            message_len_bytes = self.bits_vers_entier(entete[3])
+            dict_Solomon = {'n_parity': n_parity, 'pad_bits': pad_bits, 'message_len_bytes': message_len_bytes}
+
+            matrice = copy.deepcopy(self.matrix)
+            self.matrix = []
+            for i in range(5, len(matrice)):
+                self.matrix.append(matrice[i][:len(matrice[i]) - 5])
+
             chaine = self.create_chaine(self.matrix)
+
+            print("\033[36mCorrection des erreurs dans les donnees ...\033[0m")
             self.RS = ReedSolomon.ReedSolomon(chaine)
-            encoded_bits = self.RS.decode({'n_parity': 100, 'pad_bits': 3, 'message_len_bytes': 59})
+            encoded_bits = self.RS.decode(dict_Solomon)
+
+            print("\033[36mConversion en hexadecimal des donnees ...\033[0m")
             texte = self.morse_to_text(encoded_bits)
+
+            print("\033[36mFin du decodage !\033[0m")
+            print("Votre message est :")
             print(texte)
 
 
 if __name__ == "__main__":
-    #MorseDataEncoder()
-    decoder = MorseDataDecoder("img/img_1.jpg")
-    # Sans erreur
-    #decoder = MorseDataDecoder([[1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1], [0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1], [1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1], [0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1], [0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0], [1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0], [0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0], [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1], [1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1], [0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0], [0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0], [0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0], [0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1], [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0], [0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1], [1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0], [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1], [1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1], [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1], [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0], [0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0], [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0], [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0], [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0], [0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0], [1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1], [1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0], [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0], [0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
-
-    # Avec Erreur
-    """decoder = MorseDataDecoder([
-        [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1],
-        [0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1],
-        [1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
-        [0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-        [0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0],
-        [1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0],
-        [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1],
-        [1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1],
-        [0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0],
-        [0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0],
-        [0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0],
-        [0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1],
-        [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0],
-        [0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1],
-        [1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0],
-        [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1],
-        [1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1],
-        [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0],
-        [0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0],
-        [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-        [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0],
-        [0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
-        [1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1],
-        [1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0],
-        [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0],
-        [0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ])"""
-
-    """decoder = MorseDataDecoder([
-    	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-	    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-    	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-	    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-    	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-        [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0],
-        [1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-        [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-        [1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0],
-        [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-        [1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0],
-        [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-        [1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ])"""
-
-    decoder.run_decodeur()
+    run = int(input("\033[33m### DataMorce ###\033[0m\n\nQue voullez vous faire ?\n\t1 - Encripter\n\t2 - Decripter\n"))
+    if run == 1:
+        DataMorseEncoder()
+    else:
+        decoder = DataMorseDecoder("img/message.png")
+        decoder.run_decodeur()

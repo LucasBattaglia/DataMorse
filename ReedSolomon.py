@@ -6,7 +6,7 @@ class ReedSolomon:
         self.message = message
 
     def encode(self):
-        encoder = self.ReedSolomonEncoder(n_parity=100)
+        encoder = self.ReedSolomonEncoder(0.2)
         return encoder.encode(self.message)
 
     def decode(self, param):
@@ -17,9 +17,8 @@ class ReedSolomon:
         self.message = message
 
     class ReedSolomonEncoder:
-        def __init__(self, n_parity=10):
-            self.n_parity = n_parity
-            self.rs_codec = reedsolo.RSCodec(n_parity)
+        def __init__(self, pourcentage):
+            self.pourcentage = pourcentage
 
         def _bits_to_bytes(self, bit_list):
             bit_list = list(bit_list)
@@ -43,11 +42,20 @@ class ReedSolomon:
 
         def encode(self, bit_list):
             message_bytes, pad_bits = self._bits_to_bytes(bit_list)
+
+            # Calculer le nombre de symboles de parité autorisé
+            max_n_parity = len(message_bytes) - 1
+            if max_n_parity <= 0:
+                raise ValueError("Message trop court pour Reed-Solomon.")
+
+            n_parity = min(int(self.pourcentage * len(message_bytes)), max_n_parity)
+
+            self.rs_codec = reedsolo.RSCodec(n_parity)
             encoded_bytes = self.rs_codec.encode(message_bytes)
             encoded_bits = self._bytes_to_bits(encoded_bytes)
 
             params = {
-                'n_parity': self.n_parity,
+                'n_parity': n_parity,
                 'pad_bits': pad_bits,
                 'message_len_bytes': len(message_bytes)
             }
@@ -80,6 +88,8 @@ class ReedSolomon:
 
         def decode(self, received_bits, params):
             n_parity = params.get('n_parity')
+            if n_parity == 0:
+                return received_bits
             pad_bits = params.get('pad_bits')
             message_len_bytes = params.get('message_len_bytes')
 
