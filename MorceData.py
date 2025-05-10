@@ -524,9 +524,32 @@ class DataMorseDecoder:
             decimal_value = int(bits_str, 2)
             return decimal_value
 
+        @staticmethod
+        def compter_differences(m1, m2):
+            differences = 0
+            for i in range(len(m1)):
+                for j in range(len(m1[0])):
+                    if m1[i][j] != m2[i][j]:
+                        differences += 1
+            return differences
 
         def decoder(self):
             print("\033[36mDecodage en cours ...\033[0m")
+            print("\033[36mGestion de l'orientation du DataMorse ...\033[0m")
+            orientations = []
+            for i in range(4):
+                orientation = [row[len(self.matrix) - 5:] for row in self.matrix[:5]]
+                verif = [[1, 1, 1, 1, 1], [1, 0, 1, 0, 1], [1, 1, 1, 1, 1], [1, 0, 1, 0, 1], [1, 1, 1, 1, 1]]
+                if np.array_equal(verif, orientation):
+                    break
+                orientations.append(self.compter_differences(orientation, verif))
+                self.matrix = self.rotate_matrix_anticlockwise(self.matrix)
+
+            if len(orientations) == 4:
+                indice_min = orientations.index(min(orientations))
+                for _ in range(indice_min):
+                    self.matrix = self.rotate_matrix_anticlockwise(self.matrix)
+
             print("\033[36mExtraction de l'entete ...\033[0m")
 
             entete1 = [row[:min(11, len(self.matrix[0])-6)] for row in self.matrix[:5]]
