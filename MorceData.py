@@ -26,7 +26,7 @@ class DataMorseEncoder:
     def __init__(self):
         print("Votre message : ", end="")
         text = input()
-        print("\033[36mEncryptage de votre message en DataMorse en cours ... \033[0m")
+        print("\033[36mChiffrement  de votre message en DataMorse en cours ... \033[0m")
         self.RS = ReedSolomon.ReedSolomon(self.text_to_morse(self.remplacer_accents(text)))
         encoded_message, enc_params = self.RS.encode()
         binary_data = self.morse_to_matrix(encoded_message)
@@ -35,7 +35,7 @@ class DataMorseEncoder:
         enc_params['masque'] = masque
         donnee = self.entete(enc_params, min(len(binary_data[0])-2, 10))
         datamorseencoder = self.ajouter_lignes_et_colonnes(binary_data, donnee)
-        print("\033[36mMessage encrypter !\033[0m")
+        print("\033[36mMessage chiffrer !\033[0m")
         print("\033[36mGeneration de l'image ...\033[0m")
         img = self.generate_image(datamorseencoder)
         plt.imshow(img, cmap='gray')
@@ -223,12 +223,12 @@ class DataMorseDecoder:
             self.decodeur = self.DataMorseDecoderMatrix(data)
         else:
             raise TypeError("Le type du parametre entrer n'est pas correct: Soit rien (camera), soit un str (path de l'image), soit une liste (matrice de bit)")
-        print("\033[36mDecodeur Initialiser\033[0m")
+        print("\033[36mDecodeur Initialisé\033[0m")
 
 
     def run_decodeur(self):
         if self.decodeur is None:
-            raise ValueError("Votre decoder n'a pas étais initialisé avant d'être utilisé. Faite DataMorseDecoder(data=None)")
+            raise ValueError("Votre decodeur n'a pas étais initialisé avant d'être utilisé. Faite DataMorseDecoder(data=None)")
         self.decodeur.decoder()
 
 
@@ -534,11 +534,11 @@ class DataMorseDecoder:
             return differences
 
         def decoder(self):
-            print("\033[36mDecodage en cours ...\033[0m")
+            print("\033[36mDécodage en cours ...\033[0m")
             print("\033[36mGestion de l'orientation du DataMorse ...\033[0m")
             orientations = []
             for i in range(4):
-                orientation = [row[len(self.matrix) - 5:] for row in self.matrix[:5]]
+                orientation = [row[len(row) - 5:] for row in self.matrix[:5]]
                 verif = [[1, 1, 1, 1, 1], [1, 0, 1, 0, 1], [1, 1, 1, 1, 1], [1, 0, 1, 0, 1], [1, 1, 1, 1, 1]]
                 if np.array_equal(verif, orientation):
                     break
@@ -550,10 +550,10 @@ class DataMorseDecoder:
                 for _ in range(indice_min):
                     self.matrix = self.rotate_matrix_anticlockwise(self.matrix)
 
-            print("\033[36mExtraction de l'entete ...\033[0m")
+            print("\033[36mExtraction de l'entête ...\033[0m")
 
-            entete1 = [row[:min(11, len(self.matrix[0])-6)] for row in self.matrix[:5]]
-            entete2 = [row[len(self.matrix)-5:] for row in self.matrix[5:min(16, len(self.matrix))]]
+            entete1 = [row[:min(11, len(row)-6)] for row in self.matrix[:5]]
+            entete2 = [row[len(row)-5:] for row in self.matrix[5:min(16, len(self.matrix))]]
             entete2 = self.rotate_matrix_anticlockwise(entete2)
 
             entete = MyHamming.MyHamming(entete1, entete2).decode()
@@ -580,7 +580,7 @@ class DataMorseDecoder:
             RS = ReedSolomon.ReedSolomon(chaine)
             encoded_bits = RS.decode(dict_Solomon)
 
-            print("\033[36mConversion en hexadecimal des donnees ...\033[0m")
+            print("\033[36mConversion en alphanumérique des donnees ...\033[0m")
             texte = self.morse_to_text(encoded_bits)
 
             print("\033[36mFin du decodage !\033[0m")
@@ -589,9 +589,19 @@ class DataMorseDecoder:
 
 
 if __name__ == "__main__":
-    run = int(input("\033[33m### DataMorce ###\033[0m\n\nQue voullez vous faire ?\n\t1 - Encripter\n\t2 - Decripter\n"))
+    run = int(input("\033[33m### DataMorce ###\033[0m\n\nQue voulez vous faire ?\n\t1 - Chiffrer\n\t2 - Déchiffrer\n"))
     if run == 1:
         DataMorseEncoder()
     else:
-        decoder = DataMorseDecoder("img/message.png")
+        image = int(input("Que voulez vous déchiffrer ?\n\t1 - Image simple (votre image chiffrer arrive ici par defaut)\n\t2 - Image complexe (Erreur + texte + rotation)\n\t3 - Autre Image\n"))
+        path = ""
+        if image == 1:
+            path = "img/message.png"
+        elif image == 2:
+            path = "img/img.png"
+        elif image == 3:
+            path = input("Quel est le lien (path) de votre image ?\n")
+        else:
+            raise ValueError("Selection non valide (1, 2 ou 3) !")
+        decoder = DataMorseDecoder(path)
         decoder.run_decodeur()

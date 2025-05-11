@@ -23,7 +23,7 @@ class Masque:
         Applique le masque d'identifiant donné à la matrice (XOR des bits).
         """
         if mask_id not in self.masks:
-            raise ValueError("Identifiant de masque invalide.")
+            raise ValueError("Identifiant de masque invalide : {}".format(mask_id))
 
         mask_func = self.masks[mask_id]
         for i in range(self.height):

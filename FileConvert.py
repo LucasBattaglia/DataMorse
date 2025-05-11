@@ -1,8 +1,11 @@
 from PIL import Image
 from pathlib import Path
+import os
 
 class FileConvert:
     def __init__(self, path):
+        if not os.path.isfile(path):
+            raise FileNotFoundError("Le lien vers l'image fournis n'existe pas !")
         self.path = path
 
     def convert(self):
