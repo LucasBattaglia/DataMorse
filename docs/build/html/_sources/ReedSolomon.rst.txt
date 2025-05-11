@@ -1,0 +1,7 @@
+ReedSolomon module
+==================
+
+.. automodule:: ReedSolomon
+   :members:
+   :undoc-members:
+   :show-inheritance:

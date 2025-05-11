@@ -1,26 +1,95 @@
+"""
+ReedSolomon.py - Module pour l'encodage et le décodage de messages avec le code Reed-Solomon.
+
+Ce module fait partie du projet DataMorse.
+
+Il permet d'encoder des messages en utilisant le code Reed-Solomon pour la correction d'erreurs,
+et de décoder les messages reçus tout en corrigeant les erreurs détectables.
+
+Auteur : Lucas BATTAGLIA
+
+Version : v1.5
+"""
+
 import reedsolo
 import numpy as np
 
+
 class ReedSolomon:
+    """
+        Classe pour l'encodage et le décodage de messages avec le code Reed-Solomon.
+
+        Cette classe permet d'encoder des messages pour la correction d'erreurs et de décoder
+        les messages reçus tout en corrigeant les erreurs détectables.
+    """
     def __init__(self, message):
+        """
+            Initialise un objet ReedSolomon avec un message donné.
+
+            Args:
+                message (list): Le message à encoder.
+        """
         self.message = message
 
     def encode(self):
+        """
+            Encode le message en utilisant le code Reed-Solomon.
+
+            Returns:
+                tuple: Les bits encodés et les paramètres d'encodage.
+        """
         encoder = self.ReedSolomonEncoder(0.2)
         return encoder.encode(self.message)
 
     def decode(self, param):
+        """
+            Décode un message encodé en utilisant le code Reed-Solomon.
+
+            Args:
+                param (dict): Les paramètres d'encodage nécessaires pour le décodage.
+
+            Returns:
+                list: Le message décodé.
+        """
         decoder = self.ReedSolomonDecoder()
         return decoder.decode(self.message, param)
 
     def modifier_message(self, message):
+        """
+            Modifie le message à décoder.
+
+            Args:
+                message (list): Le nouveau message à décoder.
+        """
         self.message = message
 
     class ReedSolomonEncoder:
+        """
+            Classe interne pour l'encodage des messages avec le code Reed-Solomon.
+
+            Cette classe gère l'encodage des messages en bits et la génération de symboles de parité.
+        """
         def __init__(self, pourcentage):
+            """
+                Initialise un encodeur Reed-Solomon avec un pourcentage de symboles de parité.
+
+                Args:
+                    pourcentage (float): Le pourcentage de symboles de parité à utiliser.
+            """
+            self.rs_codec = None
             self.pourcentage = pourcentage
 
-        def _bits_to_bytes(self, bit_list):
+        @staticmethod
+        def _bits_to_bytes(bit_list):
+            """
+                Convertit une liste de bits en un tableau d'octets.
+
+                Args:
+                    bit_list (list): La liste de bits à convertir.
+
+                Returns:
+                    tuple: Un tableau d'octets et le nombre de bits de remplissage.
+            """
             bit_list = list(bit_list)
             pad_bits = (8 - len(bit_list) % 8) % 8
             bit_list += [0] * pad_bits
@@ -33,7 +102,17 @@ class ReedSolomon:
                 byte_array.append(byte_val)
             return byte_array, pad_bits
 
-        def _bytes_to_bits(self, byte_data):
+        @staticmethod
+        def _bytes_to_bits(byte_data):
+            """
+                Convertit un tableau d'octets en une liste de bits.
+
+                Args:
+                    byte_data (bytearray): Le tableau d'octets à convertir.
+
+                Returns:
+                    list: La liste de bits résultante.
+            """
             bit_list = []
             for b in byte_data:
                 for i in range(7, -1, -1):
@@ -41,6 +120,15 @@ class ReedSolomon:
             return bit_list
 
         def encode(self, bit_list):
+            """
+                Encode une liste de bits en utilisant le code Reed-Solomon.
+
+                Args:
+                    bit_list (list): La liste de bits à encoder.
+
+                Returns:
+                    tuple: Les bits encodés et les paramètres d'encodage.
+            """
             message_bytes, pad_bits = self._bits_to_bytes(bit_list)
 
             # Calculer le nombre de symboles de parité autorisé
@@ -63,10 +151,28 @@ class ReedSolomon:
             return encoded_bits, params
 
     class ReedSolomonDecoder:
+        """
+            Classe interne pour le décodage des messages avec le code Reed-Solomon.
+
+            Cette classe gère le décodage des messages et la correction d'erreurs.
+        """
         def __init__(self):
+            """
+                Initialise un décodeur Reed-Solomon.
+            """
             pass
 
-        def _bits_to_bytes(self, bit_list):
+        @staticmethod
+        def _bits_to_bytes(bit_list):
+            """
+                Convertit une liste de bits en un tableau d'octets.
+
+                Args:
+                    bit_list (list): La liste de bits à convertir.
+
+                Returns:
+                    bytearray: Le tableau d'octets résultant.
+            """
             bit_list = list(bit_list)
             if len(bit_list) % 8 != 0:
                 remove = len(bit_list) - (len(bit_list) % 8)
@@ -79,7 +185,17 @@ class ReedSolomon:
                 byte_array.append(byte_val)
             return byte_array
 
-        def _bytes_to_bits(self, byte_data):
+        @staticmethod
+        def _bytes_to_bits(byte_data):
+            """
+                Convertit un tableau d'octets en une liste de bits.
+
+                Args:
+                    byte_data (bytearray): Le tableau d'octets à convertir.
+
+                Returns:
+                    list: La liste de bits résultante.
+            """
             bit_list = []
             for b in byte_data:
                 for i in range(7, -1, -1):
@@ -87,6 +203,16 @@ class ReedSolomon:
             return bit_list
 
         def decode(self, received_bits, params):
+            """
+                Décode les bits reçus en utilisant le code Reed-Solomon.
+
+                Args:
+                    received_bits (list): Les bits reçus à décoder.
+                    params (dict): Les paramètres d'encodage nécessaires pour le décodage.
+
+                Returns:
+                    list: Le message décodé.
+            """
             n_parity = params.get('n_parity')
             if n_parity == 0:
                 return received_bits
@@ -112,12 +238,13 @@ class ReedSolomon:
 
             return np.array(original_bits, dtype=int)
 
+
 if __name__ == "__main__":
     message_bits = [
         0, 1, 0, 1, 0, 1, 0, 0,  # T
         0, 1, 0, 0, 0, 1, 0, 1,  # E
         0, 1, 0, 1, 0, 0, 1, 1,  # S
-        0, 1, 0, 1, 0, 1, 0, 0   # T
+        0, 1, 0, 1, 0, 1, 0, 0  # T
     ]
 
     RS = ReedSolomon(message_bits)

@@ -1,0 +1,7 @@
+Masque module
+=============
+
+.. automodule:: Masque
+   :members:
+   :undoc-members:
+   :show-inheritance:

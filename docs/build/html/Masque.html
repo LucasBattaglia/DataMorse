@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Masque module &#8212; Documentation DataMorse v1.4</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/translations.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Recherche" href="search.html" />
+    <link rel="next" title="MyHamming module" href="MyHamming.html" />
+    <link rel="prev" title="FileConvert module" href="FileConvert.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-Masque">
+<span id="masque-module"></span><h1>Masque module<a class="headerlink" href="#module-Masque" title="Lien permanent vers ce titre">¶</a></h1>
+<p>Masque.py - Module pour l’application et la gestion des masques sur des matrices binaires.</p>
+<p>Ce module fait partie du projet DataMorse.</p>
+<p>Il permet d’appliquer différents masques à des matrices binaires pour améliorer la robustesse
+du chiffrement, ainsi que de retirer ces masques lors du déchiffrement.</p>
+<p>Auteur : Lucas BATTAGLIA</p>
+<p>Version : v1.0</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="Masque.Masque">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Masque.</span></span><span class="sig-name descname"><span class="pre">Masque</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Masque.Masque" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Classe pour appliquer et gérer des masques sur des matrices binaires.</p>
+<p>Cette classe permet d’appliquer différents masques à des matrices binaires pour améliorer
+la robustesse du chiffrement, ainsi que de retirer ces masques lors du déchiffrement.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Masque.Masque.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Masque.Masque.__init__" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Initialise un objet Masque avec une matrice donnée.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres</dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>list</em>) – La matrice binaire sur laquelle appliquer le masque.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Masque.Masque.add_mask">
+<span class="sig-name descname"><span class="pre">add_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Masque.Masque.add_mask" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Applique un masque à la matrice et retourne la matrice masquée.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres</dt>
+<dd class="field-odd"><p><strong>mask_id</strong> (<em>int</em><em>, </em><em>optional</em>) – L’identifiant du masque à appliquer. Si None, le meilleur masque est utilisé.</p>
+</dd>
+<dt class="field-even">Renvoie</dt>
+<dd class="field-even"><p>La matrice masquée et l’identifiant du masque appliqué.</p>
+</dd>
+<dt class="field-odd">Type renvoyé</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Masque.Masque.remove_mask">
+<span class="sig-name descname"><span class="pre">remove_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Masque.Masque.remove_mask" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Retire un masque de la matrice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres</dt>
+<dd class="field-odd"><p><strong>mask_id</strong> (<em>int</em>) – L’identifiant du masque à retirer.</p>
+</dd>
+<dt class="field-even">Renvoie</dt>
+<dd class="field-even"><p>La matrice restaurée et l’identifiant du masque retiré.</p>
+</dd>
+<dt class="field-odd">Type renvoyé</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">DataMorse</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contenu</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DataMorse</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="DataMorse.html">DataMorse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FileConvert.html">FileConvert module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Masque module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MyHamming.html">MyHamming module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReedSolomon.html">ReedSolomon module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">DataMorse</a><ul>
+      <li>Previous: <a href="FileConvert.html" title="Chapitre précédent">FileConvert module</a></li>
+      <li>Next: <a href="MyHamming.html" title="Chapitre suivant">MyHamming module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Recherche rapide</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2025, Lucas BATTAGLIA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Masque.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
