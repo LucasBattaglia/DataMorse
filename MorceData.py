@@ -131,14 +131,14 @@ class DataMorseEncoder:
 
         line1 = []
         line1.extend(ajout_lignes[0])
-        line1.extend([0 if i % 2 == 0 else 1  for i in range(len(ajout_lignes[0]), x)])
+        line1.extend([0 if i % 2 == 0 else 1 for i in range(len(ajout_lignes[0]), x)])
         bisline1 = list(line1)
         bisline1.extend([1, 1, 1, 1, 1])
         new_matrice.append(bisline1)
 
         line2 = []
         line2.extend(ajout_lignes[1])
-        line2.extend([1 if i % 2 == 0 else 0  for i in range(len(ajout_lignes[1]), x)])
+        line2.extend([1 if i % 2 == 0 else 0 for i in range(len(ajout_lignes[1]), x)])
         bisline2 = list(line2)
         bisline2.extend([1, 0, 1, 0, 1])
         new_matrice.append(bisline2)
