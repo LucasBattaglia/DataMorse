@@ -17,6 +17,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import unicodedata
+import PIL.Image as Image
 
 import FileConvert
 import ReedSolomon
@@ -61,7 +62,12 @@ class DataMorseEncoder:
         datamorseencoder = self.__ajouter_lignes_et_colonnes(binary_data, donnee)
         print("\033[36mMessage chiffrer !\033[0m")
         print("\033[36mGeneration de l'image ...\033[0m")
-        img = self.__generate_image(datamorseencoder)
+        path_logo_bool = int(input("Voulez vous ajouter un logo ?\n\t1 - Oui\n\t2 - Non\n"))
+        if path_logo_bool == 1:
+            path_logo = input("Entrez le chemin de l'image de logo : ")
+        else:
+            path_logo = None
+        img = self.__generate_image(datamorseencoder, path_logo)
         plt.imshow(img, cmap='gray')
         plt.axis('off')
         cv2.imwrite('./img/message.png', img)
@@ -283,15 +289,16 @@ class DataMorseEncoder:
         """
         vertices = np.array([[x + width / 2, y], [x + width, y + height], [x, y + height]], np.int32)
         pts = vertices.reshape((-1, 1, 2))
-        cv2.polylines(image, [pts], isClosed=True, color=(0, 0, 255), thickness=1)
-        cv2.fillPoly(image, [pts], color=(0, 0, 255))
+        cv2.polylines(image, [pts], isClosed=True, color=(0, 0, 0), thickness=1)
+        cv2.fillPoly(image, [pts], color=(0, 0, 0))
 
-    def __generate_image(self, matrix):
+    def __generate_image(self, matrix, background_path=None):
         """
-            Génère une image à partir d'une matrice binaire.
+            Génère une image à partir d'une matrice binaire, avec une image de fond optionnelle.
 
             Args:
                 matrix (list): La matrice binaire à transformer en image.
+                background_path (str, optional): Le chemin de l'image de fond à utiliser.
 
             Returns:
                 ndarray: L'image générée.
@@ -299,14 +306,25 @@ class DataMorseEncoder:
         size = max(len(matrix), len(matrix[0]))
         width = 20
         height = 20
-        image = np.ones(((size + 10) * (width + 5), (size + 10) * (height + 5)), dtype=np.uint8) * 255
+        taille = ((size) * (width + 5), (size) * (height + 5))
+        image = np.ones(taille, dtype=np.uint8) * 255
+
+        # Si un chemin d'image de fond est fourni, l'ajouter
+        if background_path:
+            background = Image.open(background_path).convert("RGBA")
+            background = background.resize(taille, Image.LANCZOS)
+            image_pil = Image.fromarray(image, mode='L').convert("RGBA")
+            combined = Image.new("RGBA", taille)
+            combined = Image.blend(background, image_pil, alpha=0.75)
+            image = np.array(combined)
 
         # Donnee
         for i in range(len(matrix[0])):
             for j in range(len(matrix)):
-                x, y = i * (width + 4) + 20, (j + 3) * (height + 4) + 20
+                x, y = i * (width + 4) + 5, j * (height + 4) + 5
                 if matrix[j][i] == 1:
                     self.__draw_triangles(x, y, image, width, height)
+
         return image
 
 
@@ -908,7 +926,7 @@ if __name__ == "__main__":
         DataMorseEncoder()
     else:
         image = int(input(
-            "Que voulez vous déchiffrer ?\n\t1 - Image simple (votre image chiffrer arrive ici par defaut)\n\t2 - Image complexe (Erreur + texte + rotation)\n\t3 - Autre Image\n"))
+            "Que voulez vous déchiffrer ?\n\t1 - Image simple (votre image chiffrer arrive ici par defaut)\n\t2 - Image complexe (logo + texte + rotation)\n\t3 - Autre Image\n"))
         path = ""
         if image == 1:
             path = "img/message.png"
