@@ -56,7 +56,7 @@ Le programme générera une matrice graphique représentant le message encodé. 
 
 * Lucas Battaglia - Développeur principal
 * Chebbi Samar - Référent
-* Patrice Laurancot - Responsable d’UE
+* Patrice Laurencot - Responsable d’UE
 
 ## 6. Licence
 
