@@ -1,0 +1,7 @@
+FileConvert module
+==================
+
+.. automodule:: FileConvert
+   :members:
+   :undoc-members:
+   :show-inheritance:

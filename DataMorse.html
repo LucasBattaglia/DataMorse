@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>DataMorse module &#8212; Documentation DataMorse v1.4</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/translations.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Recherche" href="search.html" />
+    <link rel="next" title="FileConvert module" href="FileConvert.html" />
+    <link rel="prev" title="DataMorse" href="modules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-DataMorse">
+<span id="datamorse-module"></span><h1>DataMorse module<a class="headerlink" href="#module-DataMorse" title="Lien permanent vers ce titre">¶</a></h1>
+<p>DataMorse.py - Module pour le chiffrement et le déchiffrement de messages en utilisant le code Morse.</p>
+<p>Ce module est la partie principale du projet DataMorse.</p>
+<p>Il permet d’encoder des messages en code Morse, de les transformer en une matrice binaire,
+et de générer une image représentant ce message. Il inclut également un décodeur pour
+récupérer le message original à partir de l’image.</p>
+<p>Auteur : Lucas BATTAGLIA</p>
+<p>Version : v2.8</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">DataMorse.</span></span><span class="sig-name descname"><span class="pre">DataMorseDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Classe pour décoder des messages en utilisant le code Morse.</p>
+<p>Cette classe permet de décoder des messages à partir d’images, de matrices binaires,
+ou d’autres sources, et de récupérer le message original.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.DataMorseDecoderCamera">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataMorseDecoderCamera</span></span><a class="headerlink" href="#DataMorse.DataMorseDecoder.DataMorseDecoderCamera" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Sous-classe pour le décodeur utilisant une caméra.</p>
+<p>Cette classe permet de décoder des messages à partir d’images capturées par une caméra.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.DataMorseDecoderCamera.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder.DataMorseDecoderCamera.__init__" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Initialise le décodeur de caméra.</p>
+<p>Ouvre la caméra pour capturer des images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Lève</dt>
+<dd class="field-odd"><p><strong>SystemError</strong> – Si la caméra ne peut pas être ouverte.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.DataMorseDecoderCamera.decoder">
+<span class="sig-name descname"><span class="pre">decoder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder.DataMorseDecoderCamera.decoder" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Décode l’image capturée par la caméra.</p>
+<p>Cette méthode n’est pas encore implémentée.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Lève</dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – Si la méthode n’est pas implémentée.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.DataMorseDecoderImage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataMorseDecoderImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder.DataMorseDecoderImage" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Sous-classe pour le décodeur utilisant une image.</p>
+<p>Cette classe permet de décoder des messages à partir d’images fournies.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.DataMorseDecoderImage.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder.DataMorseDecoderImage.__init__" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Initialise le décodeur d’image avec le chemin de l’image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – Le chemin de l’image à décoder.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.DataMorseDecoderImage.decoder">
+<span class="sig-name descname"><span class="pre">decoder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder.DataMorseDecoderImage.decoder" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Décode l’image fournie et récupère le message.</p>
+<p>Cette méthode traite l’image pour extraire les points et reconstruire le message.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.DataMorseDecoderMatrix">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataMorseDecoderMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder.DataMorseDecoderMatrix" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Sous-classe pour le décodeur utilisant une matrice.</p>
+<p>Cette classe permet de décoder des messages à partir de matrices binaires.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.DataMorseDecoderMatrix.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder.DataMorseDecoderMatrix.__init__" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Initialise le décodeur de matrice avec la matrice fournie.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres</dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>list</em>) – La matrice binaire à décoder.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.DataMorseDecoderMatrix.decoder">
+<span class="sig-name descname"><span class="pre">decoder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder.DataMorseDecoderMatrix.decoder" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Décode la matrice fournie et récupère le message.</p>
+<p>Cette méthode traite la matrice pour extraire le message original.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder.__init__" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Initialise le décodeur DataMorse avec les données fournies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>optional</em>) – Les données à décoder, qui peuvent être une image, une matrice, etc.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="DataMorse.DataMorseDecoder.run_decodeur">
+<span class="sig-name descname"><span class="pre">run_decodeur</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseDecoder.run_decodeur" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Exécute le décodeur pour traiter les données et récupérer le message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Lève</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – Si le décodeur n’a pas été initialisé correctement.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="DataMorse.DataMorseEncoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">DataMorse.</span></span><span class="sig-name descname"><span class="pre">DataMorseEncoder</span></span><a class="headerlink" href="#DataMorse.DataMorseEncoder" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Classe pour encoder des messages en utilisant le code Morse.</p>
+<p>Cette classe permet de prendre un message en entrée, de le convertir en code Morse,
+de le transformer en une matrice binaire, et de générer une image représentant ce message.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="DataMorse.DataMorseEncoder.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#DataMorse.DataMorseEncoder.__init__" title="Lien permanent vers cette définition">¶</a></dt>
+<dd><p>Initialise l’encodeur DataMorse et demande un message à l’utilisateur.</p>
+<p>Cette méthode effectue le chiffrement du message en DataMorse et génère une image.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">DataMorse</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contenu</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">DataMorse</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DataMorse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FileConvert.html">FileConvert module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Masque.html">Masque module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MyHamming.html">MyHamming module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReedSolomon.html">ReedSolomon module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">DataMorse</a><ul>
+      <li>Previous: <a href="modules.html" title="Chapitre précédent">DataMorse</a></li>
+      <li>Next: <a href="FileConvert.html" title="Chapitre suivant">FileConvert module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Recherche rapide</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2025, Lucas BATTAGLIA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/DataMorse.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

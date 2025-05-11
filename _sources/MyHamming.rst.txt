@@ -1,0 +1,7 @@
+MyHamming module
+================
+
+.. automodule:: MyHamming
+   :members:
+   :undoc-members:
+   :show-inheritance:

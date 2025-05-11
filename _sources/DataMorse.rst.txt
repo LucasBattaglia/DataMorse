@@ -1,0 +1,7 @@
+DataMorse module
+================
+
+.. automodule:: DataMorse
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,16 @@
+Bienvenue dans la documentation de DataMorse
+============================================
+
+.. note::
+
+   Nous avons développé un nouveau protocole graphique nommé DataMorse. Le nom "DataMorse" résulte de l'association entre la notion de données ("Data") et l'idée de transmission codée grâce au "Morse". Ce protocole utilise une matrice de triangles pour représenter les informations, avec une approche symbolique plutôt qu'un codage binaire classique. DataMorse a été conçu pour être facilement identifiable sur une feuille imprimée et lisible par une machine, même en cas de déformation ou d'orientation aléatoire.
+
+   Le protocole intègre des mécanismes de détection et de correction d'erreurs, tout en s'adaptant à la taille du message à transmettre. Principalement noir et blanc pour maximiser sa robustesse, il permet également l'insertion d'un logo en arrière-plan. L'ensemble du projet a été implémenté en Python, en utilisant ses bibliothèques graphiques efficaces et son approche orientée objet.
+
+---
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contenu
+
+   modules
