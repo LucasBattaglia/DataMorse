@@ -85,7 +85,7 @@ class Masque:
             Returns:
                 tuple: La matrice restaurée et l'identifiant du masque retiré.
         """
-        self.__apply_mask(mask_id)
+        self.__apply_mask(mask_id) # Application de l'application donne la matrice normales !
         return self.__matrix, mask_id
 
     def __best_mask(self):

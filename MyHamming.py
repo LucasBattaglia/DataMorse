@@ -2,6 +2,7 @@
 MyHamming.py - Module de correction d'erreurs par code de Hamming.
 
 Ce module fait partie du projet DataMorse.
+
 Il permet d’encoder et de décoder des matrices binaires avec contrôle de parité,
 et de corriger certaines erreurs simples ou doubles via redondance.
 

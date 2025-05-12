@@ -1,5 +1,5 @@
 """
-DataMorse.py - Module pour le chiffrement et le déchiffrement de messages en utilisant le code Morse.
+DataMorse.py - Module pour le chiffrement et le déchiffrement de messages dans une image.
 
 Ce module est la partie principale du projet DataMorse.
 
@@ -43,6 +43,7 @@ class DataMorseEncoder:
         Cette classe permet de prendre un message en entrée, de le convertir en code Morse,
         de le transformer en une matrice binaire, et de générer une image représentant ce message.
     """
+
     def __init__(self):
         """
             Initialise l'encodeur DataMorse et demande un message à l'utilisateur.
@@ -86,13 +87,11 @@ class DataMorseEncoder:
             Returns:
                 str: Le texte sans accents.
         """
-        # Supprimer les accents
         texte_sans_accents = unicodedata.normalize('NFD', texte)
         texte_sans_accents = ''.join(
             c for c in texte_sans_accents
             if unicodedata.category(c) != 'Mn'
         )
-        # Convertir en majuscules
         return texte_sans_accents
 
     def __text_to_morse(self, text):
@@ -172,7 +171,7 @@ class DataMorseEncoder:
 
             Args:
                 n (int): L'entier à convertir.
-                taille (int): La taille de la liste de bits.
+                taille (int, optional): La taille de la liste de bits à renvoyer.
 
             Returns:
                 list: Une liste de bits représentant l'entier.
@@ -187,7 +186,7 @@ class DataMorseEncoder:
 
             Args:
                 valeur (dict): Les valeurs nécessaires pour créer l'en-tête.
-                taille (int): La taille des bits à utiliser.
+                taille (int, optional): La taille des bits à utiliser.
 
             Returns:
                 list: Une liste représentant l'en-tête encodé.
@@ -335,6 +334,7 @@ class DataMorseDecoder:
         Cette classe permet de décoder des messages à partir d'images, de matrices binaires,
         ou d'autres sources, et de récupérer le message original.
     """
+
     def __init__(self, data=None):
         """
             Initialise le décodeur DataMorse avec les données fournies.
@@ -369,13 +369,13 @@ class DataMorseDecoder:
                 "Votre decodeur n'a pas étais initialisé avant d'être utilisé. Faite DataMorseDecoder(data=None)")
         self.__decodeur.decoder()
 
-    ###### Sous Classe  ########
     class DataMorseDecoderCamera:
         """
             Sous-classe pour le décodeur utilisant une caméra.
 
             Cette classe permet de décoder des messages à partir d'images capturées par une caméra.
         """
+
         def __init__(self):
             """
                 Initialise le décodeur de caméra.
@@ -397,7 +397,7 @@ class DataMorseDecoder:
                 Cette méthode n'est pas encore implémentée.
 
                 Raises:
-                    NotImplementedError: Si la méthode n'est pas implémentée.
+                    NotImplementedError: La méthode n'est pas implémentée.
             """
             print("\033[36mDecodage de l'image\033[0m")
             raise NotImplementedError(
@@ -409,6 +409,7 @@ class DataMorseDecoder:
 
             Cette classe permet de décoder des messages à partir d'images fournies.
         """
+
         def __init__(self, path):
             """
                 Initialise le décodeur d'image avec le chemin de l'image.
@@ -449,12 +450,13 @@ class DataMorseDecoder:
                     points (list): La liste des autres points.
                     average_distance (float): La distance moyenne entre les points.
                     percentage (float): Le pourcentage pour déterminer l'isolement.
+
                 Returns:
                     bool: True si le point est isolé, False sinon.
             """
             distances = [np.linalg.norm(np.array(point) - np.array(other_point)) for other_point in points if
                          other_point != point]
-            if not distances:  # Si le point est le seul dans la liste
+            if not distances:
                 return True
             min_distance = min(distances)
             threshold = average_distance * (1 + percentage / 100)  # Seuil basé sur la moyenne
@@ -644,6 +646,7 @@ class DataMorseDecoder:
 
             Cette classe permet de décoder des messages à partir de matrices binaires.
         """
+
         def __init__(self, matrix):
             """
                 Initialise le décodeur de matrice avec la matrice fournie.
