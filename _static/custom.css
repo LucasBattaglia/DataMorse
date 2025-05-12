@@ -1,1 +1,18 @@
 /* This file intentionally left blank. */
+dl.class > dt {
+    /*margin-right: 2em;*/
+    border-bottom: 2px solid #ccc;
+    /*padding-top: 1em;*/
+}
+
+dl.class {
+    border: 1px solid #ccc;  /* ligne fine grise en bas */
+    padding-bottom: 1em;
+    margin-bottom: 2em;
+    margin-right: 2em;
+}
+
+dl.method > dt {
+    margin-top: 2em;
+}
+
